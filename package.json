@@ -1,0 +1,21 @@
+{
+  "name": "hackedwebsite",
+  "version": "1.0.0",
+  "description": "Email verified user authentication website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Soyan Dey",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "nodemailer": "^7.0.6",
+    "pg": "^8.16.3"
+  }
+}

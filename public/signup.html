@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h1>Create Account</h1>
+        <p class="subtitle">Create your account</p>
+
+        <form id="signupForm">
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Your Name"
+                required
+            >
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                minlength="6"
+                required
+            >
+
+            <button type="submit">
+                Create Account
+            </button>
+
+        </form>
+
+        <p id="message"></p>
+
+        <p class="link">
+            Already have an account?
+            <a href="/login.html">Login</a>
+        </p>
+
+    </div>
+</div>
+
+<script>
+const form = document.getElementById("signupForm");
+const message = document.getElementById("message");
+
+form.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    message.textContent = "Creating account...";
+
+    try {
+
+        const response = await fetch("/api/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                password
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            localStorage.setItem("verificationEmail", email);
+
+            message.textContent = "Verification code sent!";
+
+            setTimeout(() => {
+                window.location.href = "/verify.html";
+            }, 800);
+
+        } else {
+
+            message.textContent = data.message;
+        }
+
+    } catch (error) {
+
+        console.error(error);
+        message.textContent = "Something went wrong.";
+
+    }
+});
+</script>
+
+</body>
+</html>

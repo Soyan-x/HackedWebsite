@@ -1,0 +1,112 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #050505;
+    color: #00ff66;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+.card {
+    background: #0b0b0b;
+    border: 1px solid #00ff66;
+    border-radius: 12px;
+    padding: 35px;
+
+    box-shadow: 0 0 25px rgba(0, 255, 102, 0.15);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 25px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 15px;
+
+    background: #111;
+    color: #00ff66;
+
+    border: 1px solid #333;
+    border-radius: 6px;
+
+    outline: none;
+}
+
+input:focus {
+    border-color: #00ff66;
+}
+
+button {
+    width: 100%;
+    padding: 13px;
+
+    background: #00ff66;
+    color: #000;
+
+    border: none;
+    border-radius: 6px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+#message {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.link {
+    text-align: center;
+    margin-top: 20px;
+    color: #777;
+}
+
+a {
+    color: #00ff66;
+}
+
+.dashboard h1 {
+    font-size: 28px;
+}
+
+.dashboard h2 {
+    text-align: center;
+    margin: 35px 0;
+    font-size: 30px;
+}
+
+.dashboard #email {
+    text-align: center;
+    color: #777;
+    margin-bottom: 25px;
+}
+
+.dashboard button {
+    margin-top: 10px;
+}

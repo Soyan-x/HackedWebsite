@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card dashboard">
+
+        <h1>Hello, <span id="username">...</span></h1>
+
+        <h2>You are hacked 😈</h2>
+
+        <p id="email"></p>
+
+        <button id="logout">
+            Logout
+        </button>
+
+    </div>
+</div>
+
+
+<script>
+
+async function loadUser() {
+
+    try {
+
+        const response = await fetch("/api/me");
+
+        if (!response.ok) {
+
+            window.location.href = "/login.html";
+            return;
+        }
+
+        const data = await response.json();
+
+        document.getElementById("username").textContent =
+            data.user.name;
+
+        document.getElementById("email").textContent =
+            data.user.email;
+
+    } catch (error) {
+
+        console.error(error);
+
+        window.location.href = "/login.html";
+    }
+}
+
+
+document.getElementById("logout").addEventListener("click", async () => {
+
+    await fetch("/api/logout", {
+        method: "POST"
+    });
+
+    window.location.href = "/login.html";
+
+});
+
+
+loadUser();
+
+</script>
+
+</body>
+</html>
