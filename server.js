@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const { Pool } = require("pg");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const session = require("express-session");
 const pgSession = require("connect-pg-simple")(session);
 const path = require("path");
@@ -14,10 +14,15 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session
+// =========================
+// SESSION
+// =========================
+
 app.use(
     session({
         store: new pgSession({
@@ -30,28 +35,37 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
-            secure: false,
+            secure: process.env.NODE_ENV === "production",
             maxAge: 1000 * 60 * 60 * 24
         }
     })
 );
 
+// =========================
+// STATIC FILES
+// =========================
+
 app.use(express.static(path.join(__dirname, "public")));
 
-// Gmail
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD
-    }
-});
+// =========================
+// DATABASE TEST
+// =========================
 
-// Generate verification code
+pool.query("SELECT NOW()")
+    .then(() => {
+        console.log("Database connected");
+    })
+    .catch((error) => {
+        console.error("Database connection failed:", error);
+    });
+
+// =========================
+// VERIFICATION CODE
+// =========================
+
 function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
 
 // =========================
 // SIGNUP
@@ -109,14 +123,63 @@ app.post("/api/signup", async (req, res) => {
             ]
         );
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Your Verification Code",
-            text: `Your verification code is: ${verificationCode}
+        // =========================
+        // SEND VERIFICATION EMAIL
+        // =========================
 
-This code will expire in 10 minutes.`
+        const { data, error } = await resend.emails.send({
+            from: "HackedWebsite <onboarding@resend.dev>",
+            to: [email],
+            subject: "Your Verification Code",
+            html: `
+                <div style="
+                    font-family: Arial, sans-serif;
+                    max-width: 500px;
+                    margin: 40px auto;
+                    padding: 30px;
+                    border: 1px solid #ddd;
+                    border-radius: 12px;
+                ">
+
+                    <h2>Email Verification</h2>
+
+                    <p>Your verification code is:</p>
+
+                    <h1 style="
+                        letter-spacing: 8px;
+                        font-size: 32px;
+                    ">
+                        ${verificationCode}
+                    </h1>
+
+                    <p>
+                        This code will expire in 10 minutes.
+                    </p>
+
+                    <p>
+                        If you did not create this account,
+                        you can safely ignore this email.
+                    </p>
+
+                </div>
+            `
         });
+
+        if (error) {
+            console.error("Resend error:", error);
+
+            // Remove account if email could not be sent
+            await pool.query(
+                "DELETE FROM users WHERE email = $1 AND email_verified = FALSE",
+                [email]
+            );
+
+            return res.status(500).json({
+                message: "Could not send verification email"
+            });
+        }
+
+        console.log("Verification email sent:", data?.id);
 
         res.json({
             success: true,
@@ -132,7 +195,6 @@ This code will expire in 10 minutes.`
         });
     }
 });
-
 
 // =========================
 // VERIFY EMAIL
@@ -183,7 +245,6 @@ app.post("/api/verify", async (req, res) => {
     }
 });
 
-
 // =========================
 // LOGIN
 // =========================
@@ -195,7 +256,6 @@ app.post("/api/login", async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-
             return res.status(400).json({
                 message: "Email and password are required"
             });
@@ -207,7 +267,6 @@ app.post("/api/login", async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-
             return res.status(401).json({
                 message: "Invalid email or password"
             });
@@ -216,7 +275,6 @@ app.post("/api/login", async (req, res) => {
         const user = result.rows[0];
 
         if (!user.email_verified) {
-
             return res.status(403).json({
                 message: "Please verify your email first"
             });
@@ -228,13 +286,11 @@ app.post("/api/login", async (req, res) => {
         );
 
         if (!passwordMatch) {
-
             return res.status(401).json({
                 message: "Invalid email or password"
             });
         }
 
-        // Create login session
         req.session.userId = user.id;
 
         res.json({
@@ -252,7 +308,6 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-
 // =========================
 // CURRENT USER
 // =========================
@@ -262,7 +317,6 @@ app.get("/api/me", async (req, res) => {
     try {
 
         if (!req.session.userId) {
-
             return res.status(401).json({
                 message: "Not logged in"
             });
@@ -274,7 +328,6 @@ app.get("/api/me", async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-
             return res.status(401).json({
                 message: "User not found"
             });
@@ -287,14 +340,13 @@ app.get("/api/me", async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Current user error:", error);
 
         res.status(500).json({
             message: "Server error"
         });
     }
 });
-
 
 // =========================
 // LOGOUT
@@ -305,7 +357,6 @@ app.post("/api/logout", (req, res) => {
     req.session.destroy((error) => {
 
         if (error) {
-
             return res.status(500).json({
                 message: "Logout failed"
             });
@@ -317,7 +368,6 @@ app.post("/api/logout", (req, res) => {
         });
     });
 });
-
 
 // =========================
 // START SERVER
