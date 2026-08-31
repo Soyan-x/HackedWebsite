@@ -110,3 +110,19 @@ a {
 .dashboard button {
     margin-top: 10px;
 }
+
+.buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.buttons a {
+    text-decoration: none;
+}
+
+.buttons button {
+    cursor: pointer;
+    min-width: 140px;
+}
